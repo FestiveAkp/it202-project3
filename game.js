@@ -11,6 +11,9 @@ let downPressed = false;
 let leftPressed = false;
 let rightPressed = false;
 
+// Array of enemy objects on screen
+let enemies = [];
+
 
 // Handle player key down event
 document.addEventListener('keydown', e => {
@@ -107,6 +110,43 @@ const player =  {
 }
 
 
+// Enemy class for defining enemy objects
+// Might as well make this an ES6 class since we'll be making a bunch of these
+class Enemy {
+    constructor(x, y, radius = 5, speed = 3) {
+        this.x = x;
+        this.y = y;
+        this.r = radius;
+        this.speed = speed;
+    }
+
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+        ctx.fillStyle = '#F095DD';
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    move() {
+        this.y += this.speed;
+    }
+}
+
+
+// Spawn a new Enemy object on the screen and delete Enemies that move off the screen
+const spawnEnemy = () => {
+    // Create a new enemy
+    let enemy = new Enemy(Math.random() * canvas.width, 0);
+    enemies.push(enemy);
+
+    // Filter out enemies that aren't on the screen anymore
+    enemies = enemies.filter(enemy => {
+        return enemy.y < canvas.height;
+    });
+}
+
+
 // -----------------------------------------------------------------
 // Main draw loop
 const draw = () => {
@@ -117,9 +157,18 @@ const draw = () => {
     player.move();
     player.draw();
 
+    // Move and draw enemies
+    enemies.forEach(enemy => {
+        enemy.draw();
+        enemy.move();
+    });
+
     // Continue
     window.requestAnimationFrame(draw);
 }
 
 // Begin
 draw();
+
+// Start spawning enemies
+setInterval(spawnEnemy, 200);
