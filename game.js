@@ -14,6 +14,13 @@ let rightPressed = false;
 // Array of enemy objects on screen
 let enemies = [];
 
+// Interval to spawn enemies, gets faster as time progresses
+let enemySpawnInterval = 500;
+
+// The score and the current level
+let frames = 0;
+let level = 1;
+
 
 // Handle player key down event
 document.addEventListener('keydown', e => {
@@ -82,12 +89,13 @@ const player =  {
     r: 10,
     speed: 4,
     alive: true,
+    lives: 5,
 
     // Draw the player character
     draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
-        ctx.fillStyle = '#0095DD';
+        ctx.fillStyle = this.alive ? '#0095DD' : '#FF0055';
         ctx.fill();
         ctx.closePath();
     },
@@ -106,6 +114,13 @@ const player =  {
         else if (leftPressed) {
             player.x -= player.speed;
         }
+    },
+
+    // "Kill" the player and revive after some time
+    collide() {
+        this.alive = false;
+        this.lives--;
+        setTimeout(() => this.alive = true, 2000);
     }
 }
 
@@ -147,6 +162,26 @@ const spawnEnemy = () => {
 }
 
 
+// Check if the player has collided with enemies and update player accordingly
+const detectCollisions = () => {
+    // If player isn't alive, don't bother checking for collisions
+    if (!player.alive) {
+        return;
+    }
+
+    // Check each enemy
+    enemies.forEach(enemy => {
+        // Calculate distance between centers of player and enemy
+        let distance = Math.sqrt(Math.pow(player.x - enemy.x, 2) + Math.pow(player.y - enemy.y, 2));
+
+        // If there's a collision, reduce lives and make the player inactive for a bit
+        if (distance <= (player.r + enemy.r)) {
+            player.collide();
+        }
+    });
+}
+
+
 // -----------------------------------------------------------------
 // Main draw loop
 const draw = () => {
@@ -163,6 +198,9 @@ const draw = () => {
         enemy.move();
     });
 
+    // Check if the player has collided with an enemy and decrement lives if so
+    detectCollisions();
+
     // Continue
     window.requestAnimationFrame(draw);
 }
@@ -171,4 +209,4 @@ const draw = () => {
 draw();
 
 // Start spawning enemies
-setInterval(spawnEnemy, 200);
+setInterval(spawnEnemy, enemySpawnInterval);
